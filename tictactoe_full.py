@@ -141,7 +141,6 @@ class GameboardGUI:
         self.avatar1 = initializeAvatar(X_JPG)
         self.avatar2 = initializeAvatar(Y_JPG) 
 
-
     # ----------------------------------------------------------------------------------------------------
 
     def __init__(self):
@@ -184,6 +183,7 @@ class GameboardGUI:
             winnerExists = self.updateBackend(tile)
             if not winnerExists:
                 self.toggleTurn()
+            print(winnerExists)
 
     def start(self):
         self.root.mainloop()
