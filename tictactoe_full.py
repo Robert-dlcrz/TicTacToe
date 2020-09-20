@@ -1,7 +1,9 @@
 from tkinter import *
-from PIL import Image
+from PIL import ImageTk, Image
 
 X_JPG = r'iron_man.jpg'
+Y_JPG = r'batman.jpg'
+AVATAR_SIZE = (100, 100)
 TEMP_IMAGES = []
 
 WINNING_COMBOS = [
@@ -57,42 +59,42 @@ class Gameboard:
             boardStr += f'{parsePiece(row[0])} | {parsePiece(row[1])} | {parsePiece(row[2])}\n'
         return boardStr
 
-    def input_move(self, x, y, player):
+    def inputMove(self, x, y, player):
         self.board[x][y] = player
 
-    def get_tile_value(self, x, y):
+    def getTileValue(self, x, y):
         return self.board[x][y] 
 
-    def is_valid_move(self, x, y): 
-        if self.get_tile_value(x, y) == -1:
+    def isValidMove(self, x, y): 
+        if self.getTileValue(x, y) == -1:
             return True
         else:
             return False  
 
-    def winner_exists(self):
+    def winnerExists(self):
 
-        def all_equal(list_):
-            first_item = list_[0]
+        def allEqual(list_):
+            firstItem = list_[0]
             for item in list_[1:]:
-                if item != first_item:
+                if item != firstItem:
                     return False
                 if item == -1: # unfilled
                     return False
             return True   
 
         for combo in WINNING_COMBOS:
-            tiles_of_interest = [] 
+            tilesOfInterest = [] 
             for coordinate in combo:
                 coordinates = COORDINATES[coordinate]  
                 x = coordinates[0] 
                 y = coordinates[1]  
-                tile = self.get_tile_value(x, y)
-                tiles_of_interest.append(tile)
-            if all_equal(tiles_of_interest):
+                tile = self.getTileValue(x, y)
+                tilesOfInterest.append(tile)
+            if allEqual(tilesOfInterest):
                 return True
         return False 
 
-class Gameboard_GUI:
+class GameboardGUI:
 
     # Initialization functions ---------------------------------------------------------------------------
 
@@ -112,7 +114,7 @@ class Gameboard_GUI:
         self.canvas.create_line(200, 0, 200, 300, width=5)
         self.canvas.create_line(0, 100, 300, 100, width=5)
         self.canvas.create_line(0, 200, 300, 200, width=5)
-        self.canvas.bind("<Button-1>", self.execute_player_move) 
+        self.canvas.bind("<Button-1>", self.executePlayerMove) 
 
     def initializeTitleFrame(self):
         self.titleFrame = Frame(self.root, width=300, height=100, bg='blue')
@@ -127,47 +129,64 @@ class Gameboard_GUI:
         self.scoreX.grid(row=0, column=0)
         self.scoreY = Label(self.scoreFrame, text='Y: 0', font='Times 20 bold')
         self.scoreY.grid(row=1, column=0)
+    
+    def initializeAvatars(self):
+        
+        def initializeAvatar(path):
+            avatar = Image.open(path)
+            avatar = avatar.resize(AVATAR_SIZE)
+            avatarTK = ImageTk.PhotoImage(avatar)
+            return avatarTK 
+        
+        self.avatar1 = initializeAvatar(X_JPG)
+        self.avatar2 = initializeAvatar(Y_JPG) 
+
 
     # ----------------------------------------------------------------------------------------------------
 
     def __init__(self):
+        self.backend = Gameboard()
         self.initializeWindow()
         self.initializeGameFrame() 
         self.initializeTitleFrame()
         self.initializeScoreFrame()
-
+        self.initializeAvatars() 
         self.turn = 1
-        self.avatar_1 = PhotoImage(file='avatar2.gif')
 
-        self.backend = Gameboard()
+    def toggleTurn(self):
+        if self.turn == 1:
+            self.turn = 2
+        else:
+            self.turn = 1
 
-    def find_tile(self, x, y):
+    def findTile(self, x, y):
         for alias, coordinates in GUI_COORDINATES.items():
             if x in coordinates[0] and y in coordinates[1]:
                 return alias
     
-    def update_backend(self, tile):
-        self.backend.input_move(*COORDINATES[tile], self.turn)
-        return self.backend.winner_exists()
+    def updateBackend(self, tile):
+        self.backend.inputMove(*COORDINATES[tile], self.turn)
+        return self.backend.winnerExists()
 
-    def valid_move(self, tile):
-        return self.backend.is_valid_move(*COORDINATES[tile])
+    def validMove(self, tile):
+        return self.backend.isValidMove(*COORDINATES[tile])
 
-    def execute_player_move(self, event):
+    def executePlayerMove(self, event):
         x = event.x
         y = event.y
-        tile = self.find_tile(x, y)
+        tile = self.findTile(x, y)
         assert tile is not None, f'Tile is None, coordinates are x: {x} and y: {y}'
-        if self.valid_move(tile):
-            player_image = self.avatar_1 if self.turn == 1 else None # change later
+        if self.validMove(tile):
+            playerImage = self.avatar1 if self.turn == 1 else self.avatar2
             NW_x = GUI_COORDINATES[tile][0][0]
             NW_y = GUI_COORDINATES[tile][1][0]
-            self.canvas.create_image(NW_x, NW_y, image=player_image, anchor=NW)
-            winner_exists = self.update_backend(tile)
-            print(winner_exists)
+            self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW)
+            winnerExists = self.updateBackend(tile)
+            if not winnerExists:
+                self.toggleTurn()
 
     def start(self):
         self.root.mainloop()
 
 if __name__ == '__main__':
-    Gameboard_GUI().start()
+    GameboardGUI().start()
