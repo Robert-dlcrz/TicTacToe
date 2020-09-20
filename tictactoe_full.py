@@ -94,14 +94,16 @@ class Gameboard:
 
 class Gameboard_GUI:
 
-    def __init__(self):
+    # Initialization functions ---------------------------------------------------------------------------
+
+    def initializeWindow(self):
         self.root = Tk()
         self.root.geometry('600x300')
         # root.minsize(300, 300)
         self.root.title('Tic Tac Toe')
         # root.resizable(0, 0)
-
-        # tic tac toe
+        
+    def initializeGameFrame(self):
         self.gameFrame = Frame(self.root, width=300, height=300, bg='red')
         self.gameFrame.grid(rowspan=2, column=0) # rowspan is not 0 based
         self.canvas = Canvas(self.gameFrame, height=300, width=300, bd=0)
@@ -110,23 +112,29 @@ class Gameboard_GUI:
         self.canvas.create_line(200, 0, 200, 300, width=5)
         self.canvas.create_line(0, 100, 300, 100, width=5)
         self.canvas.create_line(0, 200, 300, 200, width=5)
-        self.canvas.bind("<Button-1>", self.execute_player_move)    
+        self.canvas.bind("<Button-1>", self.execute_player_move) 
 
-        # title
+    def initializeTitleFrame(self):
         self.titleFrame = Frame(self.root, width=300, height=100, bg='blue')
         self.titleFrame.grid(row=0, column=1)
-
-        # score
-        self.scoreFrame = Frame(self.root, width=300, height=200, bg='pink')
-        self.scoreFrame.grid(row=1, column=1)
-
         self.gameName = Label(self.titleFrame, text='Tic Tac Toe', font='Times 20 bold')
         self.gameName.pack()
 
+    def initializeScoreFrame(self):
+        self.scoreFrame = Frame(self.root, width=300, height=200, bg='pink')
+        self.scoreFrame.grid(row=1, column=1)
         self.scoreX = Label(self.scoreFrame, text='X: 0', font='Times 20 bold')
         self.scoreX.grid(row=0, column=0)
         self.scoreY = Label(self.scoreFrame, text='Y: 0', font='Times 20 bold')
         self.scoreY.grid(row=1, column=0)
+
+    # ----------------------------------------------------------------------------------------------------
+
+    def __init__(self):
+        self.initializeWindow()
+        self.initializeGameFrame() 
+        self.initializeTitleFrame()
+        self.initializeScoreFrame()
 
         self.turn = 1
         self.avatar_1 = PhotoImage(file='avatar2.gif')
@@ -160,7 +168,6 @@ class Gameboard_GUI:
 
     def start(self):
         self.root.mainloop()
-
 
 if __name__ == '__main__':
     Gameboard_GUI().start()
