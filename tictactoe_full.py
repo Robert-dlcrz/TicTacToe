@@ -1,24 +1,8 @@
-# Example of what we are currently trying to biuld: 
-
-# players X and O have started the game
-# Here is the board:
-# _ | _ | _
-# _ | _ | _
-# _ | _ | _
-# Player x, what do you want to play? upper right
-# here is the board:
-# _ | _ | X
-# _ | _ | _
-# _ | _ | _
-# Player O, what do you want to play? upper right
-# Invalid piece, try again: bottom left
-# _ | _ | X
-# _ | _ | _ 
-# O | _ | _
-
-# https://github.com/ganeshramg/Tkinter-TicTacToe/blob/master/tictactoe.py
-
 from tkinter import *
+from PIL import Image
+
+X_JPG = r'iron_man.jpg'
+TEMP_IMAGES = []
 
 WINNING_COMBOS = [
     ['UL', 'UM', 'UR'], 
@@ -77,7 +61,13 @@ class Gameboard:
         self.board[x][y] = player
 
     def get_tile_value(self, x, y):
-        return self.board[x][y]  
+        return self.board[x][y] 
+
+    def is_valid_move(self, x, y): 
+        if self.get_tile_value(x, y) == -1:
+            return True
+        else:
+            return False  
 
     def winner_exists(self):
 
@@ -101,52 +91,76 @@ class Gameboard:
             if all_equal(tiles_of_interest):
                 return True
         return False 
+
+class Gameboard_GUI:
+
+    def __init__(self):
+        self.root = Tk()
+        self.root.geometry('600x300')
+        # root.minsize(300, 300)
+        self.root.title('Tic Tac Toe')
+        # root.resizable(0, 0)
+
+        # tic tac toe
+        self.gameFrame = Frame(self.root, width=300, height=300, bg='red')
+        self.gameFrame.grid(rowspan=2, column=0) # rowspan is not 0 based
+        self.canvas = Canvas(self.gameFrame, height=300, width=300, bd=0)
+        self.canvas.pack(anchor=CENTER)
+        self.canvas.create_line(100, 0, 100, 300, width=5)
+        self.canvas.create_line(200, 0, 200, 300, width=5)
+        self.canvas.create_line(0, 100, 300, 100, width=5)
+        self.canvas.create_line(0, 200, 300, 200, width=5)
+        self.canvas.bind("<Button-1>", self.execute_player_move)    
+
+        # title
+        self.titleFrame = Frame(self.root, width=300, height=100, bg='blue')
+        self.titleFrame.grid(row=0, column=1)
+
+        # score
+        self.scoreFrame = Frame(self.root, width=300, height=200, bg='pink')
+        self.scoreFrame.grid(row=1, column=1)
+
+        self.gameName = Label(self.titleFrame, text='Tic Tac Toe', font='Times 20 bold')
+        self.gameName.pack()
+
+        self.scoreX = Label(self.scoreFrame, text='X: 0', font='Times 20 bold')
+        self.scoreX.grid(row=0, column=0)
+        self.scoreY = Label(self.scoreFrame, text='Y: 0', font='Times 20 bold')
+        self.scoreY.grid(row=1, column=0)
+
+        self.turn = 1
+        self.avatar_1 = PhotoImage(file='avatar2.gif')
+
+        self.backend = Gameboard()
+
+    def find_tile(self, x, y):
+        for alias, coordinates in GUI_COORDINATES.items():
+            if x in coordinates[0] and y in coordinates[1]:
+                return alias
     
-def player_move(event):
-    x = event.x
-    y = event.y
-    tile = None
-    for alias, coordinates in GUI_COORDINATES.items():
-        if x in coordinates[0] and y in coordinates[1]:
-            tile = alias
-    print(tile)
-    assert tile is not None, f'Tile is None, coordinates are x: {x} and y: {y}'
+    def update_backend(self, tile):
+        self.backend.input_move(*COORDINATES[tile], self.turn)
+        return self.backend.winner_exists()
+
+    def valid_move(self, tile):
+        return self.backend.is_valid_move(*COORDINATES[tile])
+
+    def execute_player_move(self, event):
+        x = event.x
+        y = event.y
+        tile = self.find_tile(x, y)
+        assert tile is not None, f'Tile is None, coordinates are x: {x} and y: {y}'
+        if self.valid_move(tile):
+            player_image = self.avatar_1 if self.turn == 1 else None # change later
+            NW_x = GUI_COORDINATES[tile][0][0]
+            NW_y = GUI_COORDINATES[tile][1][0]
+            self.canvas.create_image(NW_x, NW_y, image=player_image, anchor=NW)
+            winner_exists = self.update_backend(tile)
+            print(winner_exists)
+
+    def start(self):
+        self.root.mainloop()
+
 
 if __name__ == '__main__':
-    root = Tk()
-    root.geometry('600x300')
-    # root.minsize(300, 300)
-    root.title('Tic Tac Toe')
-    # root.resizable(0, 0)
-
-    # tic tac toe
-    gameFrame = Frame(root, width=300, height=300, bg='red')
-    gameFrame.grid(rowspan=2, column=0) # rowspan is not 0 based
-    canvas = Canvas(gameFrame, height=300, width=300, bd=0)
-    canvas.pack(anchor=CENTER)
-    canvas.create_line(100, 0, 100, 300, width=5)
-    canvas.create_line(200, 0, 200, 300, width=5)
-    canvas.create_line(0, 100, 300, 100, width=5)
-    canvas.create_line(0, 200, 300, 200, width=5)
-    canvas.bind("<Button-1>", player_move)    
-
-    # title
-    titleFrame = Frame(root, width=300, height=100, bg='blue')
-    titleFrame.grid(row=0, column=1)
-
-    # score
-    scoreFrame = Frame(root, width=300, height=200, bg='pink')
-    scoreFrame.grid(row=1, column=1)
-
-    gameName = Label(titleFrame, text='Tic Tac Toe', font='Times 20 bold')
-    gameName.pack()
-
-    scoreX = Label(scoreFrame, text='X: 0', font='Times 20 bold')
-    scoreX.grid(row=0, column=0)
-    scoreY = Label(scoreFrame, text='Y: 0', font='Times 20 bold')
-    scoreY.grid(row=1, column=0)
-
-    root.mainloop()
-
-
-
+    Gameboard_GUI().start()
