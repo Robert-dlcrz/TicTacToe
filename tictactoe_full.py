@@ -72,6 +72,7 @@ class Gameboard:
             return False  
 
     def winnerExists(self):
+        # returns True if a winner exists (from the 8 winning combos)
 
         def allEqual(list_):
             firstItem = list_[0]
@@ -93,6 +94,16 @@ class Gameboard:
             if allEqual(tilesOfInterest):
                 return True
         return False 
+    
+    def tieGame(self):
+        # returns True if all tiles are filled but no winner
+        allTiles = []
+        for row in self.board:
+            allTiles.extend(row)
+        return -1 not in allTiles 
+
+    def reset(self):
+        self.__init__()
 
 class GameboardGUI:
 
@@ -165,7 +176,7 @@ class GameboardGUI:
     
     def updateBackend(self, tile):
         self.backend.inputMove(*COORDINATES[tile], self.turn)
-        return self.backend.winnerExists()
+        print(self.backend.winnerExists())
 
     def validMove(self, tile):
         return self.backend.isValidMove(*COORDINATES[tile])
@@ -179,11 +190,15 @@ class GameboardGUI:
             playerImage = self.avatar1 if self.turn == 1 else self.avatar2
             NW_x = GUI_COORDINATES[tile][0][0]
             NW_y = GUI_COORDINATES[tile][1][0]
-            self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW)
-            winnerExists = self.updateBackend(tile)
-            if not winnerExists:
+            self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW, tags=('avatarImage'))
+            self.updateBackend(tile)
+            if not self.backend.winnerExists() and not self.backend.tieGame():
+                # if no winner exists and tiles still are open to play
                 self.toggleTurn()
-            print(winnerExists)
+            else: 
+                # when a winner exists or (a tied) game is over
+                self.backend.reset()
+                self.canvas.delete('avatarImage')
 
     def start(self):
         self.root.mainloop()
