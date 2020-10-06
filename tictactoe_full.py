@@ -44,9 +44,9 @@ GUI_COORDINATES = {
 class Gameboard:
 
     def __init__(self):
-        self.board = [[-1, -1, -1],
-                      [-1, -1, -1], 
-                      [-1, -1, -1]]
+        self.board = [[(-1,-1), (-1,-1), (-1,-1)],
+                      [(-1,-1), (-1,-1), (-1,-1)], 
+                      [(-1,-1), (-1,-1), (-1,-1)]]
 
     def __str__(self):
         def parsePiece(piece):
@@ -66,7 +66,7 @@ class Gameboard:
         return self.board[x][y] 
 
     def isValidMove(self, x, y): 
-        if self.getTileValue(x, y) == -1:
+        if self.getTileValue(x, y)[0] == -1:
             return True
         else:
             return False  
@@ -91,15 +91,16 @@ class Gameboard:
                 y = coordinates[1]  
                 tile = self.getTileValue(x, y)
                 tilesOfInterest.append(tile)
-            if allEqual(tilesOfInterest):
-                return True
+            tileValues = [t[0] for t in tilesOfInterest]
+            if allEqual(tileValues):
+                return tilesOfInterest
         return False 
     
     def tieGame(self):
         # returns True if all tiles are filled but no winner
         allTiles = []
         for row in self.board:
-            allTiles.extend(row)
+            allTiles.extend([t[0] for t in row])
         return -1 not in allTiles 
 
     def reset(self):
@@ -162,6 +163,8 @@ class GameboardGUI:
         self.initializeScoreFrame()
         self.initializeAvatars() 
         self.turn = 1
+        self.blink = False
+        self.gameOver = False
 
     def toggleTurn(self):
         if self.turn == 1:
@@ -174,14 +177,39 @@ class GameboardGUI:
             if x in coordinates[0] and y in coordinates[1]:
                 return alias
     
-    def updateBackend(self, tile):
-        self.backend.inputMove(*COORDINATES[tile], self.turn)
-        print(self.backend.winnerExists())
+    def updateBackend(self, tile, imgID):
+        self.backend.inputMove(*COORDINATES[tile], (self.turn, imgID, tile))
+        # print(self.backend.winnerExists())
 
     def validMove(self, tile):
         return self.backend.isValidMove(*COORDINATES[tile])
 
+    def blinkShowTile(self, tile):
+        if not self.blink:
+            return
+        playerImage = self.avatar1 if self.turn == 1 else self.avatar2
+        NW_x = GUI_COORDINATES[tile[2]][0][0]
+        NW_y = GUI_COORDINATES[tile[2]][1][0]
+        imgID = self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW, tags=('avatarImage'))
+        tile[1] = imgID
+        self.root.after(300, self.blinkHideTile, tile)
+
+    def blinkHideTile(self, tile):
+        if not self.blink:
+            return
+        self.canvas.delete(tile[1])
+        self.root.after(300, self.blinkShowTile, tile) 
+
+    def blinkTiles(self, tileIDs):
+        self.blink = True
+        tile = list(tileIDs[0])
+        for tile in tileIDs:
+            tile = list(tile)
+            self.blinkHideTile(tile)
+
     def executePlayerMove(self, event):
+        if self.gameOver:
+            return 
         x = event.x
         y = event.y
         tile = self.findTile(x, y)
@@ -190,15 +218,19 @@ class GameboardGUI:
             playerImage = self.avatar1 if self.turn == 1 else self.avatar2
             NW_x = GUI_COORDINATES[tile][0][0]
             NW_y = GUI_COORDINATES[tile][1][0]
-            self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW, tags=('avatarImage'))
-            self.updateBackend(tile)
-            if not self.backend.winnerExists() and not self.backend.tieGame():
+            imgID = self.canvas.create_image(NW_x, NW_y, image=playerImage, anchor=NW, tags=('avatarImage'))
+            self.updateBackend(tile, imgID)
+            winnerTiles = self.backend.winnerExists()
+            tie = self.backend.tieGame()
+            if not winnerTiles and not tie:
                 # if no winner exists and tiles still are open to play
                 self.toggleTurn()
             else: 
                 # when a winner exists or (a tied) game is over
-                self.backend.reset()
-                self.canvas.delete('avatarImage')
+                self.gameOver = True
+                if not tie:
+                    self.backend.reset()
+                    self.root.after(450, self.blinkTiles, winnerTiles)
 
     def start(self):
         self.root.mainloop()

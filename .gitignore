@@ -1,3 +1,4 @@
 *.gif
-test_pic.py
 *.jpg
+*.py
+!tictactoe_full.py
