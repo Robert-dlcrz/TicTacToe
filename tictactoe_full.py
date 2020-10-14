@@ -29,7 +29,7 @@ COORDINATES = {
     'BR': [2,2]
 }
 
-GUI_COORDINATES = {
+GUI_COORDINATES = {  
     'UL': ( range(0, 100),   range(0, 100)   ), 
     'UM': ( range(100, 200), range(0, 100)   ),  
     'UR': ( range(200, 300), range(0, 100)   ), 
@@ -181,7 +181,7 @@ class GameboardGUI:
         self.backend.inputMove(*COORDINATES[tile], (self.turn, imgID, tile))
         # print(self.backend.winnerExists())
 
-    def validMove(self, tile):
+    def validMove(self, tile): 
         return self.backend.isValidMove(*COORDINATES[tile])
 
     def blinkShowTile(self, tile):
@@ -228,8 +228,10 @@ class GameboardGUI:
             else: 
                 # when a winner exists or (a tied) game is over
                 self.gameOver = True
-                if not tie:
-                    self.backend.reset()
+                self.backend.reset()
+                if winnerTiles:
+                    # if someone actually WON the game ...
+                    # this is what initiates the blinking of the 3 tiles 
                     self.root.after(450, self.blinkTiles, winnerTiles)
 
     def start(self):
