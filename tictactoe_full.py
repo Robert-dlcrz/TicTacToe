@@ -135,11 +135,19 @@ class GameboardGUI:
         self.gameName.pack()
 
     def initializeScoreFrame(self):
+        
+        def createScore(playerName):
+            score = StringVar()
+            score.set(f'{playerName}: 0')
+            return score
+
+        self.p1Score = createScore(self.player1Name)
+        self.p2Score = createScore(self.player2Name) 
         self.scoreFrame = Frame(self.root, width=300, height=200, bg='pink')
         self.scoreFrame.grid(row=1, column=1)
-        self.scoreX = Label(self.scoreFrame, text='X: 0', font='Times 20 bold')
+        self.scoreX = Label(self.scoreFrame, textvariable=self.p1Score, font='Times 20 bold')
         self.scoreX.grid(row=0, column=0)
-        self.scoreY = Label(self.scoreFrame, text='Y: 0', font='Times 20 bold')
+        self.scoreY = Label(self.scoreFrame, textvariable=self.p2Score, font='Times 20 bold')
         self.scoreY.grid(row=1, column=0)
     
     def initializeAvatars(self):
@@ -156,6 +164,8 @@ class GameboardGUI:
     # ----------------------------------------------------------------------------------------------------
 
     def __init__(self):
+        self.player1Name = 'X'
+        self.player2Name = 'Y'
         self.backend = Gameboard()
         self.initializeWindow()
         self.initializeGameFrame() 
@@ -180,6 +190,19 @@ class GameboardGUI:
     def updateBackend(self, tile, imgID):
         self.backend.inputMove(*COORDINATES[tile], (self.turn, imgID, tile))
         # print(self.backend.winnerExists())
+
+    def updateScoreFrame(self):
+        
+        def updateScore(pScore):
+            base = "".join(pScore.get().split(' ')[0:-1])
+            points = int(pScore.get().split(' ')[-1])
+            points += 1
+            pScore.set(f'{base} {points}')
+
+        if self.turn == 1:
+            updateScore(self.p1Score)
+        else:
+            updateScore(self.p2Score)
 
     def validMove(self, tile): 
         return self.backend.isValidMove(*COORDINATES[tile])
@@ -228,6 +251,7 @@ class GameboardGUI:
             else: 
                 # when a winner exists or (a tied) game is over
                 self.gameOver = True
+                self.updateScoreFrame()
                 self.backend.reset()
                 if winnerTiles:
                     # if someone actually WON the game ...
