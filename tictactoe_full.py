@@ -118,8 +118,8 @@ class GameboardGUI:
         # root.resizable(0, 0)
         
     def initializeGameFrame(self):
-        self.gameFrame = Frame(self.root, width=300, height=300, bg='red')
-        self.gameFrame.grid(rowspan=2, column=0) # rowspan is not 0 based
+        self.gameFrame = Frame(self.root, width=300, height=300)
+        self.gameFrame.grid(rowspan=3, column=0) # rowspan is not 0 based
         self.canvas = Canvas(self.gameFrame, height=300, width=300, bd=0)
         self.canvas.pack(anchor=CENTER)
         self.canvas.create_line(100, 0, 100, 300, width=5)
@@ -143,12 +143,18 @@ class GameboardGUI:
 
         self.p1Score = createScore(self.player1Name)
         self.p2Score = createScore(self.player2Name) 
-        self.scoreFrame = Frame(self.root, width=300, height=200, bg='pink')
+        self.scoreFrame = Frame(self.root, width=300, height=100)
         self.scoreFrame.grid(row=1, column=1)
         self.scoreX = Label(self.scoreFrame, textvariable=self.p1Score, font='Times 20 bold')
         self.scoreX.grid(row=0, column=0)
         self.scoreY = Label(self.scoreFrame, textvariable=self.p2Score, font='Times 20 bold')
         self.scoreY.grid(row=1, column=0)
+
+    def initializeRestartFrame(self):
+        self.restartFrame = Frame(self.root, width=300, height=100)
+        self.restartFrame.grid(row=2, column=1)
+        self.restartButton = Button(self.restartFrame, text="Restart", fg="red", command=self.restartGame)
+        self.restartButton.grid(row=0, column=0)
     
     def initializeAvatars(self):
         
@@ -171,6 +177,7 @@ class GameboardGUI:
         self.initializeGameFrame() 
         self.initializeTitleFrame()
         self.initializeScoreFrame()
+        self.initializeRestartFrame()
         self.initializeAvatars() 
         self.turn = 1
         self.blink = False
@@ -251,12 +258,18 @@ class GameboardGUI:
             else: 
                 # when a winner exists or (a tied) game is over
                 self.gameOver = True
-                self.updateScoreFrame()
                 self.backend.reset()
                 if winnerTiles:
                     # if someone actually WON the game ...
                     # this is what initiates the blinking of the 3 tiles 
+                    self.updateScoreFrame()
                     self.root.after(450, self.blinkTiles, winnerTiles)
+    
+    def restartGame(self):
+        self.gameOver = False
+        self.blink = False
+        self.backend.reset()
+        self.canvas.delete('avatarImage')
 
     def start(self):
         self.root.mainloop()
