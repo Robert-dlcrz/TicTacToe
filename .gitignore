@@ -1,4 +1,1 @@
-*.gif
-*.jpg
-*.py
-!tictactoe_full.py
+.DS_Store
